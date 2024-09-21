@@ -1,4 +1,4 @@
-from db import DB # Импортируем объект db из основного файла приложения
+from db import DB
 
 class Customers(DB.Model):
     __tablename__ = "Customers"

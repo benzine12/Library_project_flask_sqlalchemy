@@ -4,17 +4,19 @@ from Books import Books
 from Customers import Customers
 from db import DB
 
+#initiate a flask aplication and sqlalchemy database
 app = Flask(__name__)  
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///library.DB'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
 
 DB.init_app(app)
 
-#test func to she if server is running property
+#test func to show if server is running property
 @app.route('/test', methods=['GET'])
 def test():
     return {"test":"success"}
 
+#func to add new customer
 @app.route('/add_customer',methods=['POST'])
 def add_customer():
     data = request.json
@@ -27,6 +29,7 @@ def add_customer():
     DB.session.commit()
     return jsonify({"message": 'customer added'}),201
 
+#func to add a book
 @app.route('/add_book',methods=['POST'])
 def add_book():
     data = request.json
@@ -40,6 +43,7 @@ def add_book():
     DB.session.commit()
     return jsonify({"message": 'Book added'}),201
 
+#func to add a new loan with book id and customer id
 @app.route('/loan_book', methods=['POST'])
 def loan_book():
     data = request.json
@@ -61,6 +65,7 @@ def loan_book():
     DB.session.commit()
     return jsonify({"message": "Loan added"}), 201
 
+#func that you update the retur date of the book in loans table
 @app.route('/return_book/<int:id>', methods=['PUT'])
 def return_book(id):
     data = request.json
@@ -72,6 +77,7 @@ def return_book(id):
     else:
         return jsonify({"message": "Loan not found"}), 404
 
+#func to show all books
 @app.route('/books',methods=['GET'])
 def get_Books():
     all_books = Books.query.all()
@@ -83,6 +89,7 @@ def get_Books():
         'type':book.type 
         } for book in all_books])
 
+#func to show all customers
 @app.route('/customers',methods=['GET'])
 def get_Customers():
     all_Customers = Customers.query.all()
@@ -93,6 +100,7 @@ def get_Customers():
         'age':customer.age,
         } for customer in all_Customers])
 
+#func to show all loans 
 @app.route('/loans',methods=['GET'])
 def get_loans():
     all_loans = Loans.query.all()
@@ -104,6 +112,7 @@ def get_loans():
         'Returndate':loan.Returndate,
         } for loan in all_loans])
 
+#func to delete a book
 @app.route('/del_book/<int:id>',methods=['DELETE'])
 def del_book(id):
     book = Books.query.get(id)
@@ -114,6 +123,7 @@ def del_book(id):
     else:
         return jsonify({'message':'book does not exist'},404)
 
+#func to delete a loan
 @app.route('/del_loan/<int:id>',methods=['DELETE'])
 def del_loan(id):
     loan = Loans.query.get(id)
@@ -124,9 +134,9 @@ def del_loan(id):
     else:
         return jsonify({'message':'loan does not exist'},404)
 
+#starting point
 if __name__ == '__main__':
     with app.app_context():
         DB.create_all()  
-       
     app.run(debug=True) 
     

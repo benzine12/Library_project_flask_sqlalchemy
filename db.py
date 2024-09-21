@@ -1,4 +1,4 @@
-# db.py
+# maded to easy import DB object to all files
 from flask_sqlalchemy import SQLAlchemy
 
-DB = SQLAlchemy()  # Создание экземпляра SQLAlchemy без привязки к приложению Flask
+DB = SQLAlchemy() 
