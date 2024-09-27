@@ -7,6 +7,7 @@ class Books(DB.Model):
     author = DB.Column(DB.String(100), nullable=False)
     year_published = DB.Column(DB.Integer, nullable=False)
     type = DB.Column(DB.Integer, nullable=False)
+    is_active = DB.Column(DB.Boolean, default=True)
 
     def __repr__(self):
-        return f'<Book {self.name}, Author: {self.author}>'
+        return f'<Book {self.name}, Author: {self.author}, Active: {self.is_active}>'

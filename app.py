@@ -1,18 +1,20 @@
 from flask import Flask, jsonify, request
 from Loans import Loans
 from Books import Books
-from Customers import Customers
+from Customers import Customer
 from db import DB
+from flask_cors import CORS
 
 #initiate a flask aplication and sqlalchemy database
-app = Flask(__name__)  
+app = Flask(__name__)
+CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///library.DB'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
 
 DB.init_app(app)
 
 #test func to show if server is running property
-@app.route('/test', methods=['GET'])
+@app.route('/', methods=['GET'])
 def test():
     return {"test":"success"}
 
@@ -20,7 +22,7 @@ def test():
 @app.route('/add_customer',methods=['POST'])
 def add_customer():
     data = request.json
-    new_customer = Customers(
+    new_customer = Customer(
         name=data['name'],
         city=data['city'],
         age=data['age']
@@ -47,7 +49,7 @@ def add_book():
 @app.route('/loan_book', methods=['POST'])
 def loan_book():
     data = request.json
-    customer = Customers.query.filter_by(id=data['CustID']).first()
+    customer = Customer.query.filter_by(id=data['CustID']).first()
     if customer is None:
         return jsonify({"error": "Customer not found"}), 404
     
@@ -92,12 +94,14 @@ def get_Books():
 #func to show all customers
 @app.route('/customers',methods=['GET'])
 def get_Customers():
-    all_Customers = Customers.query.all()
+    all_Customers = Customer.query.all()
     return jsonify([{
         'id': customer.id,
         'name':customer.name,
         'city':customer.city,
         'age':customer.age,
+        'email':customer.email,
+        # 'status':customer.is_active
         } for customer in all_Customers])
 
 #func to show all loans 
