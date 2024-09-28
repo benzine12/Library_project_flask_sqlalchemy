@@ -25,7 +25,8 @@ def add_customer():
     new_customer = Customer(
         name=data['name'],
         city=data['city'],
-        age=data['age']
+        age=data['age'],
+        email=data['email']
         )
     DB.session.add(new_customer)
     DB.session.commit()
@@ -49,24 +50,26 @@ def add_book():
 @app.route('/loan_book', methods=['POST'])
 def loan_book():
     data = request.json
-    customer = Customer.query.filter_by(id=data['CustID']).first()
+
+    # Look up the customer by name
+    customer = Customer.query.filter_by(name=data['CustomerName']).first()
     if customer is None:
         return jsonify({"error": "Customer not found"}), 404
-    
-    book = Books.query.filter_by(id=data['BookID']).first()
+
+    # Look up the book by name
+    book = Books.query.filter_by(name=data['BookName']).first()
     if book is None:
         return jsonify({"error": "Book not found"}), 404
 
     new_loan = Loans(
-        CustID=data['CustID'],
-        BookID=data['BookID'],
+        CustID=customer.id,  # Use the customer's ID
+        BookID=book.id,      # Use the book's ID
         Loandate=data['Loandate'],
-        Returndate=data.get('Returndate')  # Может быть None
+        Returndate=data.get('Returndate')  # May be None
     )
     DB.session.add(new_loan)
     DB.session.commit()
     return jsonify({"message": "Loan added"}), 201
-
 #func that you update the retur date of the book in loans table
 @app.route('/return_book/<int:id>', methods=['PUT'])
 def return_book(id):
@@ -88,7 +91,8 @@ def get_Books():
         'name':book.name,
         'author':book.author,
         'year_published':book.year_published,
-        'type':book.type 
+        'type':book.type,
+        'is_active': book.is_active
         } for book in all_books])
 
 #func to show all customers
@@ -101,42 +105,49 @@ def get_Customers():
         'city':customer.city,
         'age':customer.age,
         'email':customer.email,
-        # 'status':customer.is_active
+        'is_active': customer.is_active
         } for customer in all_Customers])
 
-#func to show all loans 
-@app.route('/loans',methods=['GET'])
+@app.route('/loans', methods=['GET'])
 def get_loans():
     all_loans = Loans.query.all()
-    return jsonify([{
-        'id': loan.id,
-        'CustID':loan.CustID,
-        'BookID':loan.BookID,
-        'Loandate':loan.Loandate,
-        'Returndate':loan.Returndate,
-        } for loan in all_loans])
+    loans_data = []
+    for loan in all_loans:
+        loans_data.append({
+            'id': loan.id,
+            'CustID': loan.CustID,
+            'CustomerName': loan.customer.name,
+            'BookID': loan.BookID,
+            'BookTitle': loan.book.name,
+            'Loandate': loan.Loandate,
+            'Returndate': loan.Returndate,
+            'is_active': loan.is_active
+        })
+    return jsonify(loans_data)
 
-#func to delete a book
-@app.route('/del_book/<int:id>',methods=['DELETE'])
-def del_book(id):
+#func to deactivate a book
+@app.route('/books/<int:id>/toggle-status', methods=['PUT'])
+def toggle_book_status(id):
     book = Books.query.get(id)
     if book:
-        DB.session.delete(book)
+        book.is_active = not book.is_active
         DB.session.commit()
-        return jsonify({'message':'book deleted'})
+        status = 'activated' if book.is_active else 'deactivated'
+        return jsonify({'message': f'book {status} successfully.', 'is_active': book.is_active}), 200
     else:
-        return jsonify({'message':'book does not exist'},404)
-
-#func to delete a loan
-@app.route('/del_loan/<int:id>',methods=['DELETE'])
-def del_loan(id):
-    loan = Loans.query.get(id)
-    if loan:
-        DB.session.delete(loan)
+        return jsonify({'message': 'book does not exist.'}), 404
+    
+#func to deactivate a customer
+@app.route('/customers/<int:id>/toggle-status', methods=['PUT'])
+def toggle_customer_status(id):
+    customer = Customer.query.get(id)
+    if customer:
+        customer.is_active = not customer.is_active
         DB.session.commit()
-        return jsonify({'message':'loan deleted'})
+        status = 'activated' if customer.is_active else 'deactivated'
+        return jsonify({'message': f'Customer {status} successfully.', 'is_active': customer.is_active}), 200
     else:
-        return jsonify({'message':'loan does not exist'},404)
+        return jsonify({'message': 'Customer does not exist.'}), 404
 
 #starting point
 if __name__ == '__main__':
