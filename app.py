@@ -4,6 +4,7 @@ from Books import Books
 from Customers import Customer
 from db import DB
 from flask_cors import CORS
+from sqlalchemy import or_
 
 #initiate a flask aplication and sqlalchemy database
 app = Flask(__name__)
@@ -13,6 +14,49 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 DB.init_app(app)
 
+# Add the search endpoint
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'books': [], 'customers': []}), 200
+
+    # Search books by name or author
+    books = Books.query.filter(
+        or_(
+            Books.name.ilike(f'%{query}%'),
+            Books.author.ilike(f'%{query}%')
+        )
+    ).all()
+
+    # Search customers by name or email
+    customers = Customer.query.filter(
+        or_(
+            Customer.name.ilike(f'%{query}%'),
+            Customer.email.ilike(f'%{query}%')
+        )
+    ).all()
+
+    # Serialize the results
+    books_data = [{
+        'id': book.id,
+        'name': book.name,
+        'author': book.author,
+        'year_published': book.year_published,
+        'type': book.type,
+        'is_active': book.is_active
+    } for book in books]
+
+    customers_data = [{
+        'id': customer.id,
+        'name': customer.name,
+        'city': customer.city,
+        'age': customer.age,
+        'email': customer.email,
+        'is_active': customer.is_active
+    } for customer in customers]
+
+    return jsonify({'books': books_data, 'customers': customers_data}), 200
 #test func to show if server is running property
 @app.route('/', methods=['GET'])
 def test():
@@ -166,6 +210,40 @@ def toggle_customer_status(id):
     else:
         return jsonify({'message': 'Customer does not exist.'}), 404
 
+@app.route('/loans/<int:id>', methods=['GET'])
+def get_loan_by_id(id):
+    loan = Loans.query.get(id)
+    if loan:
+        loan_data = {
+            'id': loan.id,
+            'CustID': loan.CustID,
+            'CustomerName': loan.customer.name,
+            'BookID': loan.BookID,
+            'BookTitle': loan.book.name,
+            'Loandate': loan.Loandate,
+            'Returndate': loan.Returndate,
+            'is_active': loan.is_active  # Ensure is_active is included
+        }
+        return jsonify(loan_data), 200
+    else:
+        return jsonify({'message': 'Loan not found'}), 404
+
+@app.route('/books/<int:id>', methods=['GET'])
+def get_book_by_id(id):
+    book = Books.query.get(id)
+    if book:
+        book_data = {
+            'id': book.id,
+            'name': book.name,
+            'author': book.author,
+            'year_published': book.year_published,
+            'type': book.type,
+            'is_active': book.is_active
+        }
+        return jsonify(book_data), 200
+    else:
+        return jsonify({'message': 'Book not found'}), 404
+    
 #starting point
 if __name__ == '__main__':
     with app.app_context():
