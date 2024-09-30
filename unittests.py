@@ -104,6 +104,7 @@ def populate_loans(n=50):
         # Decide whether to set Returndate or leave it as NULL
         if random.random() < RETURN_DATE_NULL_PROBABILITY:
             return_date = None  # Book not yet returned
+            is_active = True    # Loan is active
         else:
             # Decide if the return is late
             if random.random() < LATE_RETURN_PROBABILITY:
@@ -115,20 +116,21 @@ def populate_loans(n=50):
             else:
                 # On-time return
                 return_date = due_date if due_date <= datetime.now().date() else datetime.now().date()
+            is_active = False   # Loan is inactive since the book is returned
         
         # Format dates as strings in 'YYYY-MM-DD' format or set to None
         loan = Loans(
             CustID=customer.id,
             BookID=book.id,
             Loandate=loan_date.strftime('%Y-%m-%d'),
-            Returndate=return_date.strftime('%Y-%m-%d') if return_date else None
+            Returndate=return_date.strftime('%Y-%m-%d') if return_date else None,
+            is_active=is_active  # Set is_active based on Returndate
         )
         loans.append(loan)
     
     DB.session.bulk_save_objects(loans)
     DB.session.commit()
     print(f"Added {n} loans.")
-
 if __name__ == "__main__":
     with app.app_context():
         clear_data()            # Clear existing data

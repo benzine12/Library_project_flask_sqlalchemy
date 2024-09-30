@@ -56,29 +56,46 @@ def loan_book():
     if customer is None:
         return jsonify({"error": "Customer not found"}), 404
 
+    # Check if the customer is inactive
+    if not customer.is_active:
+        return jsonify({"error": "Customer is inactive and cannot loan books"}), 400
+
     # Look up the book by name
     book = Books.query.filter_by(name=data['BookName']).first()
     if book is None:
         return jsonify({"error": "Book not found"}), 404
 
+    # Check if the book is inactive
+    if not book.is_active:
+        return jsonify({"error": "Book is inactive and cannot be loaned"}), 400
+
+    # Check if the book is already loaned out (active loan exists for the book)
+    active_loan = Loans.query.filter_by(BookID=book.id, is_active=True).first()
+    if active_loan:
+        return jsonify({"error": "Book is already loaned out"}), 400
+
     new_loan = Loans(
         CustID=customer.id,  # Use the customer's ID
         BookID=book.id,      # Use the book's ID
         Loandate=data['Loandate'],
-        Returndate=data.get('Returndate')  # May be None
+        Returndate=None,     # Since the book is being loaned, Returndate is None
+        is_active=True       # Loan is active
     )
     DB.session.add(new_loan)
     DB.session.commit()
     return jsonify({"message": "Loan added"}), 201
 #func that you update the retur date of the book in loans table
-@app.route('/return_book/<int:id>', methods=['PUT'])
+@app.route('/return_book/<int:id>', methods=['POST'])
 def return_book(id):
     data = request.json
     loan = Loans.query.get(id)
-    if loan:
+    if loan and loan.is_active:
         loan.Returndate = data.get('Returndate')
+        loan.is_active = False  # Set is_active to False since the book is returned
         DB.session.commit() 
-        return jsonify({"message": "Return date updated"}), 201
+        return jsonify({"message": "Return date updated, loan closed"}), 201
+    elif loan and not loan.is_active:
+        return jsonify({"message": "Loan is already closed"}), 400
     else:
         return jsonify({"message": "Loan not found"}), 404
 
@@ -121,7 +138,7 @@ def get_loans():
             'BookTitle': loan.book.name,
             'Loandate': loan.Loandate,
             'Returndate': loan.Returndate,
-            'is_active': loan.is_active
+            'is_active': loan.is_active  # Ensure is_active is included
         })
     return jsonify(loans_data)
 
