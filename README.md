@@ -23,8 +23,8 @@ Installation
 
 	1.	Clone the Repository
 
-git clone https://github.com/yourusername/library-management-api.git
-cd library-management-api
+git clone https://github.com/benzine12/Library_project_flask_sqlalchemy
+cd Library_project_flask_sqlalchemy
 
 
 	2.	Create a Virtual Environment
