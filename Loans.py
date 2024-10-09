@@ -2,10 +2,10 @@
 from db import DB
 
 class Loans(DB.Model):
-    __tablename__ = "loans"  # Use lowercase for consistency
+    __tablename__ = "loans"
     id = DB.Column(DB.Integer, primary_key=True)
-    CustID = DB.Column(DB.Integer, DB.ForeignKey('customers.id'), nullable=False)  # Matches 'customers' table
-    BookID = DB.Column(DB.Integer, DB.ForeignKey('books.id'), nullable=False)       # Matches 'books' table
+    CustID = DB.Column(DB.Integer, DB.ForeignKey('customers.id'), nullable=False) 
+    BookID = DB.Column(DB.Integer, DB.ForeignKey('books.id'), nullable=False)    
     Loandate = DB.Column(DB.String(40), nullable=False)
     Returndate = DB.Column(DB.String(40), nullable=True)
     is_active = DB.Column(DB.Boolean, default=True)

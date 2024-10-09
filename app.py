@@ -222,7 +222,7 @@ def get_loan_by_id(id):
             'BookTitle': loan.book.name,
             'Loandate': loan.Loandate,
             'Returndate': loan.Returndate,
-            'is_active': loan.is_active  # Ensure is_active is included
+            'is_active': loan.is_active  
         }
         return jsonify(loan_data), 200
     else:
@@ -243,6 +243,23 @@ def get_book_by_id(id):
         return jsonify(book_data), 200
     else:
         return jsonify({'message': 'Book not found'}), 404
+    
+# Add the route to get a customer by ID
+@app.route('/customers/<int:id>', methods=['GET'])
+def get_customer_by_id(id):
+    customer = Customer.query.get(id)
+    if customer:
+        customer_data = {
+            'id': customer.id,
+            'name': customer.name,
+            'city': customer.city,
+            'age': customer.age,
+            'email': customer.email,
+            'is_active': customer.is_active
+        }
+        return jsonify(customer_data), 200
+    else:
+        return jsonify({'message': f'Customer with ID {id} not found.'}), 404
     
 #starting point
 if __name__ == '__main__':

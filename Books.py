@@ -2,7 +2,7 @@
 from db import DB
 
 class Books(DB.Model):
-    __tablename__ = "books"  # Changed to lowercase
+    __tablename__ = "books"  
     id = DB.Column(DB.Integer, primary_key=True)
     name = DB.Column(DB.String(100), nullable=False)
     author = DB.Column(DB.String(100), nullable=False)

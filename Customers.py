@@ -2,7 +2,7 @@
 from db import DB
 
 class Customer(DB.Model):
-    __tablename__ = "customers"  # Changed to lowercase
+    __tablename__ = "customers" 
     id = DB.Column(DB.Integer, primary_key=True)
     name = DB.Column(DB.String(100), nullable=False)
     city = DB.Column(DB.String(100), nullable=False)
